@@ -1,6 +1,6 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { WebhookEvent } from "@clerk/nextjs/server";
+import type { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 
 // Create new Svix instance with secret
@@ -51,7 +51,7 @@ export const POST = async (req: Request) => {
 
   if (eventType === "user.created") {
     try {
-      const res = await db.user.create({
+      await db.user.create({
         data: {
           id,
           firstName: evt.data.first_name ?? "Unknown",
