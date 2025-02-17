@@ -13,6 +13,9 @@ export const env = createEnv({
       .default("development"),
     CLERK_SECRET_KEY: z.string(),
     SIGNING_SECRET: z.string(),
+    AURINKO_CLIENT_ID: z.string(),
+    AURINKO_CLIENT_SECRET: z.string(),
+    AURINKO_SIGNING_SECRET: z.string(),
   },
 
   /**
@@ -23,6 +26,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string(),
+    NEXT_PUBLIC_BASE_URL: z.string().url(),
   },
 
   /**
@@ -37,6 +41,10 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     SIGNING_SECRET: process.env.SIGNING_SECRET,
+    AURINKO_CLIENT_ID: process.env.AURINKO_CLIENT_ID,
+    AURINKO_CLIENT_SECRET: process.env.AURINKO_CLIENT_SECRET,
+    AURINKO_SIGNING_SECRET: process.env.AURINKO_SIGNING_SECRET,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
