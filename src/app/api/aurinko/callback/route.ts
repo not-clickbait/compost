@@ -2,9 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeAurinkoCode, getAccountDetails } from "~/lib/aurinko";
 import { db } from "~/server/db";
+import { waitUntil } from "@vercel/functions";
 
 export const GET = async (req: NextRequest) => {
-  const { userId } = await auth();
+  const { userId, getToken } = await auth();
 
   if (!userId) {
     return new Response("Unauthorized", {
@@ -36,6 +37,24 @@ export const GET = async (req: NextRequest) => {
         accessToken,
       },
     });
+
+    const body = {
+      accountId,
+      accessToken,
+    };
+
+    // hit and run initial-sync
+    const token = await getToken();
+    waitUntil(
+      fetch(new URL("/api/initial-sync", req.url).toString(), {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
     return NextResponse.redirect(new URL("/mail", req.url));
   } else {

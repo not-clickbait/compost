@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { SyncResponse, SyncUpdatedResponse } from "~/lib/types";
 
 export const getAurinkoAuthURL = async (
   serviceType: "Google" | "Office365",
@@ -14,7 +15,7 @@ export const getAurinkoAuthURL = async (
   const params = new URLSearchParams({
     clientId: process.env.AURINKO_CLIENT_ID!,
     serviceType,
-    scope: "Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All",
+    scopes: "Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All",
     responseType: "code",
     returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/aurinko/callback`,
   });
@@ -84,5 +85,63 @@ export const getAccountDetails = async (
   return {
     email: accountDetails.email,
     name: accountDetails.name,
+  };
+};
+
+export const startEmailSync = async (accessToken: string, daysWithin = 7) => {
+  const params = new URLSearchParams({
+    daysWithin: daysWithin.toString(),
+    bodyType: "html",
+  });
+
+  const url = `https://api.aurinko.io/v1/email/sync?${params.toString()}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error: Could not start email sync");
+  }
+
+  const syncResponse: SyncResponse = await response.json();
+
+  return {
+    syncUpdatedToken: syncResponse.syncUpdatedToken,
+    syncDeletedToken: syncResponse.syncDeletedToken,
+    ready: syncResponse.ready,
+  };
+};
+
+export const requestChangedEmails = async (
+  accessToken: string,
+  deltaToken: string,
+) => {
+  const params = new URLSearchParams({
+    deltaToken,
+  });
+
+  const url = `https://api.aurinko.io/v1/email/sync/updated?${params.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error: Could not get changed emails");
+  }
+
+  const changedEmailsResponse: SyncUpdatedResponse = await response.json();
+
+  return {
+    nextPageToken: changedEmailsResponse.nextPageToken,
+    nextDeltaToken: changedEmailsResponse.nextDeltaToken,
+    records: changedEmailsResponse.records,
   };
 };
