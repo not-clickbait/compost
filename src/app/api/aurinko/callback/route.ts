@@ -22,6 +22,8 @@ export const GET = async (req: NextRequest) => {
 
     const { email, name } = await getAccountDetails(accessToken);
 
+    // Todo: the accountId will be different on re-linking the same email, upsert based on user_id
+
     await db.account.upsert({
       where: {
         id: accountId,

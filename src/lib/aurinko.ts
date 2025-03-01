@@ -9,7 +9,8 @@ export const getAurinkoAuthURL = async (
   const { userId } = await auth();
 
   if (!userId) {
-    throw new Error("Unauthorized");
+    // throw new Error("Unauthorized");
+    return "/sign-in";
   }
 
   const params = new URLSearchParams({
@@ -116,13 +117,22 @@ export const startEmailSync = async (accessToken: string, daysWithin = 7) => {
   };
 };
 
-export const requestChangedEmails = async (
-  accessToken: string,
-  deltaToken: string,
-) => {
-  const params = new URLSearchParams({
-    deltaToken,
-  });
+export const requestChangedEmails = async ({
+  accessToken,
+  deltaToken,
+  pageToken,
+}: {
+  accessToken: string;
+  deltaToken?: string;
+  pageToken?: string;
+}) => {
+  const params = new URLSearchParams();
+
+  if (pageToken) {
+    params.set("pageToken", pageToken);
+  } else if (deltaToken) {
+    params.set("deltaToken", deltaToken);
+  }
 
   const url = `https://api.aurinko.io/v1/email/sync/updated?${params.toString()}`;
 

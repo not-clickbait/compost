@@ -1,8 +1,14 @@
-import { LinkAccountButton } from "~/components/link-account-button";
+"use client";
 
-export default async function Home() {
+import { LinkAccountButton } from "~/components/link-account-button";
+import { useAuth } from "@clerk/nextjs";
+
+export default function Home() {
+  const { isSignedIn } = useAuth();
+
   return (
     <div>
+      SignedIn: {isSignedIn ? "true" : "false"} <br />
       <LinkAccountButton />
     </div>
   );

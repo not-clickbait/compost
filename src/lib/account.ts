@@ -22,24 +22,31 @@ export class Account {
       throw new Error("Initial sync failed");
     }
 
-    let nextDeltaToken, nextPageToken;
+    let nextPageToken = undefined;
 
     const recordsToPersist = [];
 
     do {
-      const response = await requestChangedEmails(
-        this.accessToken,
-        syncUpdatedToken,
-      );
-
-      ({ nextDeltaToken, nextPageToken } = response);
+      // Todo keep track of sync status, abort on failure
+      const response = await requestChangedEmails({
+        accessToken: this.accessToken,
+        deltaToken: syncUpdatedToken,
+        pageToken: nextPageToken,
+      });
 
       recordsToPersist.push(...response.records);
-      console.log(`Fetched ${response.records.length} records`);
 
-      syncUpdatedToken = nextDeltaToken;
+      nextPageToken = response.nextPageToken ?? null;
+
+      if (response.nextDeltaToken) {
+        syncUpdatedToken = response.nextDeltaToken;
+        console.log("Sync completed ✅");
+      }
     } while (nextPageToken);
 
-    console.log(`Persisting ${recordsToPersist.length} records`);
+    return {
+      records: recordsToPersist,
+      syncUpdatedToken,
+    };
   };
 }

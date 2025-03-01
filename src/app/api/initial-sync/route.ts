@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "~/server/db";
 import { Account } from "~/lib/account";
+import { persistEmails } from "~/lib/sync-to-db";
 
 export const POST = async (req: NextRequest) => {
   const {
@@ -31,7 +32,33 @@ export const POST = async (req: NextRequest) => {
 
   const account = new Account(accessToken);
 
-  await account.initialSync();
+  try {
+    const { records, syncUpdatedToken } = await account.initialSync();
+
+    if (!records) {
+      return new Response("Error: Initial sync failed", {
+        status: 500,
+      });
+    }
+
+    await db.account.update({
+      where: {
+        id: accountId,
+      },
+      data: {
+        deltaSyncToken: syncUpdatedToken,
+      },
+    });
+
+    await persistEmails({
+      accountId,
+      emails: records,
+    });
+  } catch (error) {
+    return new Response("Error: Initial sync failed", {
+      status: 500,
+    });
+  }
 
   return new Response("Success", {
     status: 200,
